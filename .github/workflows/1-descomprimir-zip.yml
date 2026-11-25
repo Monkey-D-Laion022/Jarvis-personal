@@ -1,0 +1,33 @@
+name: 1 - Descomprimir ZIP
+
+# Extrae JARVIS-Android-Fase1.zip y sube los archivos del proyecto a la raiz del repo.
+# Se ejecuta a mano: pestana Actions -> "1 - Descomprimir ZIP" -> Run workflow.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extraer y commitear
+        run: |
+          unzip -q -o JARVIS-Android-Fase1.zip -d tmp_zip
+          # GitHub no deja que un workflow modifique .github/workflows con el token por defecto,
+          # por eso se excluyen .github y bootstrap (el workflow de build se crea a mano).
+          rsync -a --exclude='.github' --exclude='bootstrap' tmp_zip/JARVIS-Android/ ./
+          rm -rf tmp_zip
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No hay cambios para commitear."
+          else
+            git commit -m "Extraer proyecto JARVIS-Android Fase 1"
+            git push
+          fi
+          
