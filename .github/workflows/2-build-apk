@@ -1,0 +1,38 @@
+name: 2 - Build APK
+
+# Compila el proyecto que ya esta en la raiz del repo (despues de correr el workflow 1).
+# Se ejecuta a mano: pestana Actions -> "2 - Build APK" -> Run workflow.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: "8.5"
+      - name: Pruebas unitarias + assembleDebug
+        run: gradle --no-daemon testDebugUnitTest assembleDebug
+      - name: Subir reportes de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-pruebas-unitarias
+          path: app/build/reports/tests/
+          if-no-files-found: ignore
+      - name: Subir APK debug
+        uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
